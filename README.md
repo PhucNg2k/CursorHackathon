@@ -1,161 +1,119 @@
-# Donation Points Map - Backend API
+# Cursor DreamTeam - Cursor Hackathon
+## Donation Points Map - Disaster Relief Platform for Vietnam
 
-Backend API for a donation points map application built with FastAPI.
+A web platform designed to support people in difficult areas across Vietnam by creating and managing relief points for food, clothing, and essential supplies. The platform connects major cities and non-disaster regions with communities facing hardships, natural disasters, and floods throughout Vietnam.
 
-## Tech Stack
+## 🌊 Mission
 
-- **Backend**: FastAPI (Python)
-- **Database**: SQLite
-- **Authentication**: JWT tokens
+Vietnam faces frequent natural disasters, including annual floods, typhoons, and seasonal hardships that leave many communities in urgent need of support. **Donation Points Map** addresses the critical challenge of connecting relief resources with people who need them most, when they need them most.
 
-## Setup
+## 🎯 The Challenge
 
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+### The Problem
 
-2. Set environment variable for Google OAuth (optional, defaults to empty string):
-```bash
-export GOOGLE_CLIENT_ID="your-google-client-id"
-```
+During natural disasters and economic hardships in Vietnam:
 
-3. Run the application:
-```bash
-uvicorn app.main:app --reload
-```
+**For People in Affected Areas:**
+- Difficulty finding nearby relief points for food, clothing, and essential supplies
+- Limited access to information about available aid during emergencies
+- Time-sensitive needs that require immediate access to resources
 
-The API will be available at `http://localhost:8000`
+**For Relief Organizations:**
+- Challenges in communicating relief point locations to those in need
+- Fragmented coordination across multiple channels
+- Lack of visibility for their relief efforts
 
-Interactive API documentation: `http://localhost:8000/docs`
+### The Solution
 
-## API Endpoints
+**Donation Points Map** provides a centralized, real-time platform that connects major cities (Hanoi, Ho Chi Minh City, Da Nang) and non-disaster areas with communities facing floods, typhoons, and economic hardships through an interactive map showing all active relief points across Vietnam.
 
-### Creators
+## ✨ Key Features
 
-- `POST /api/creators/login` - Login/Register creator with Google OAuth
-  - Body: `{ "id_token": "string" }` (Google ID token from frontend)
-  - Returns: `{ "access_token": "string", "token_type": "bearer" }`
-  - Note: Creates new creator if email doesn't exist, otherwise logs in existing creator
+### 📍 Interactive Relief Map
+- Visual map interface displaying all active relief points across Vietnam
+- Real-time updates as organizations create new points
+- Click markers to view complete details including organization name, address, and time windows
 
-- `GET /api/creators` - List all creators
-  - Query params: `search` (optional, search by name/email), `verified` (optional, filter by verified status)
-  - Returns: List of creator objects
+### 🔍 Intelligent Search
+- **GPS Search**: Find relief points within a radius of your current location
+- **Route Search**: Discover points along travel routes from start to destination
+- **Browse All**: View all available relief points to understand network coverage
 
-- `GET /api/creators/{id}` - Get a single creator by ID
-  - Returns: Creator object
+### 🔐 Seamless Access
+- One-click Google OAuth login for instant access
+- No password management needed
+- Automatic account creation and verification
 
-- `GET /api/creators/me` - Get current authenticated creator info
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: Creator object
+### ✏️ Simple Management
+- Organizations can create relief points in minutes
+- Include organization details, GPS coordinates, descriptions, and time windows
+- Update point status (ongoing/ended) in real-time
+- Centralized dashboard to manage all created points
 
-- `PATCH /api/creators/{id}` - Update a creator (only themselves)
-  - Headers: `Authorization: Bearer <token>`
-  - Body: `{ "name": "string (optional)", "email": "string (optional)" }`
-  - Returns: Updated creator object
+### 📱 Universal Accessibility
+- Works seamlessly on desktop, tablet, and mobile devices
+- Touch-friendly interface optimized for mobile use
+- Fast performance even with limited connectivity
 
-- `DELETE /api/creators/{id}` - Delete a creator (only themselves)
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: 204 No Content
-  - Note: Cannot delete if creator has donation points
+## 🌏 Real-World Impact
 
-- `POST /api/creators/{id}/verify` - Verify a creator (requires authentication)
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: Verified creator object
+### Use Cases
 
-### Admin
+**Flood Relief Operations:**
+During annual monsoon seasons, the platform enables rapid deployment of relief points, quick discovery of food and clothing distribution centers, and coordination between multiple relief organizations.
 
-- `GET /api/admin/creators` - List all creators (requires authentication)
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: List of all creator objects
+**Typhoon Response:**
+When typhoons hit coastal regions, organizations can quickly set up and share relief point locations, while affected communities can find nearby aid points using GPS.
 
-- `POST /api/admin/creators/{id}/verify` - Verify a creator (admin endpoint)
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: Verified creator object
+**Remote Area Support:**
+Connects urban resources with hard-to-reach communities, enabling major cities to establish relief points for remote regions and helping people in isolated areas discover available support.
 
-- `POST /api/admin/creators/{id}/unverify` - Unverify a creator (admin endpoint)
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: Unverified creator object
+**Emergency Coordination:**
+Provides a centralized information hub for all relief efforts, offering real-time visibility of available resources and enabling efficient resource allocation across regions.
 
-### Donation Points
+## 💡 Why This Matters
 
-- `POST /api/donation-points` - Create a new donation point with images (requires authenticated creator)
-  - Headers: `Authorization: Bearer <token>`
-  - Content-Type: `multipart/form-data`
-  - Body (form data):
-    - `organization_name`: string (required)
-    - `address`: string (required)
-    - `latitude`: float (required, -90 to 90)
-    - `longitude`: float (required, -180 to 180)
-    - `description`: string (optional)
-    - `start_date`: datetime (optional, ISO format)
-    - `end_date`: datetime (optional, ISO format)
-    - `files`: array of image files (optional)
-  - Returns: Created donation point with image paths
+**Saves Critical Time:** During disasters, every minute counts. Quick access to relief point locations can mean the difference between receiving aid or not.
 
-- `GET /api/donation-points` - Search donation points
-  - Query params:
-    - GPS search: `?lat=37.7749&lng=-122.4194&radius=10` (radius in km, default 10)
-    - Route search: `?start_lat=37.0&start_lng=-122.0&end_lat=38.0&end_lng=-121.0`
-    - No params: Returns all points
-  - Returns: List of donation points
+**Bridges Geographic Gaps:** Creates digital bridges connecting resource-rich urban areas with communities in need, regardless of physical distance.
 
-- `GET /api/donation-points/{id}` - Get a single donation point
-  - Returns: Donation point details
+**Increases Aid Visibility:** Makes relief points easily discoverable, ensuring organizations' efforts reach those who need them most.
 
-- `PATCH /api/donation-points/{id}` - Update a donation point (only by creator)
-  - Headers: `Authorization: Bearer <token>`
-  - Body:
-    ```json
-    {
-      "status": "ongoing" | "ended",
-      "description": "string (optional)",
-      "end_date": "2024-01-31T23:59:59 (optional)"
-    }
-    ```
-  - Returns: Updated donation point
+**Builds National Network:** Creates a unified relief network covering all of Vietnam, enabling better resource allocation and identifying coverage gaps.
 
-- `POST /api/donation-points/{id}/images` - Upload images for a donation point
-  - Headers: `Authorization: Bearer <token>`
-  - Body: Multipart form data with image files
-  - Returns: Updated donation point with new images
+**Promotes Transparency:** Provides clear, accessible information about where help is available, building trust in relief efforts.
 
-## Database Models
+**Empowers Communities:** Gives people in difficult areas the tools to find essential supplies (food, clothing) when they need them most.
 
-### Creator
-- `id`: Integer (primary key)
-- `name`: String
-- `email`: String (unique)
-- `password_hash`: String
-- `verified`: Boolean (default: false)
-- `created_at`: DateTime
+## 🚀 Getting Started
 
-### DonationPoint
-- `id`: Integer (primary key)
-- `creator_id`: Integer (foreign key to Creator)
-- `organization_name`: String
-- `address`: String
-- `latitude`: Float
-- `longitude`: Float
-- `description`: String (optional)
-- `images`: JSON array of file paths
-- `start_date`: DateTime (optional)
-- `end_date`: DateTime (optional)
-- `status`: Enum ("ongoing" | "ended")
-- `created_at`: DateTime
+### For Organizations
 
-## Features
+1. Sign in with Google account
+2. Click "Create Point" and fill in relief point details
+3. Add GPS coordinates or use current location
+4. Point appears on map immediately for people to find
+5. Update status and information as needed
 
-- JWT-based authentication
-- Creator registration and verification
-- Geospatial search (GPS radius and route bounding box)
-- Image upload support
-- CORS enabled for frontend integration
+### For People Seeking Help
 
-## Notes
+1. Open the map to view all relief points in your area
+2. Use GPS to find closest points
+3. Search along travel paths if needed
+4. Click any point for complete information
+5. Use address and location data to reach relief points
 
-- Database file (`db.sqlite`) is created automatically on first run
-- Images are stored in the `uploads/` directory
-- For production, change the `SECRET_KEY` in `app/auth.py`
-- **Users are automatically verified on login/registration** (no manual verification needed)
-- Admin endpoints (`/api/admin/*`) are accessible by any authenticated user (for MVP simplicity)
+## 🌟 Impact
+
+The platform supports the collective effort of relief organizations, volunteers, and communities across Vietnam by:
+
+- Enabling better coordination between multiple organizations
+- Optimizing resource allocation across regions
+- Empowering communities with tools to help themselves
+- Building sustainable networks connecting resources with need
+
+---
+
+**Built with ❤️ to support communities across Vietnam during times of need**
+
+*Connecting resources with need, one point at a time*
