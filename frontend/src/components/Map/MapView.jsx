@@ -12,16 +12,44 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
+// Green icon for donation points
+const greenIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
+// Blue icon for user location
+const blueIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+})
+
 // Component to handle map center changes
 function MapController({ centerPoint }) {
   const map = useMap()
+  const prevCenterPointIdRef = useRef(null)
   
   useEffect(() => {
-    if (centerPoint) {
-      map.setView([centerPoint.latitude, centerPoint.longitude], 15, {
-        animate: true,
-        duration: 0.5
-      })
+    if (centerPoint && centerPoint.id !== prevCenterPointIdRef.current) {
+      try {
+        if (map && map.setView) {
+          map.setView([centerPoint.latitude, centerPoint.longitude], 15, {
+            animate: true,
+            duration: 0.5
+          })
+          prevCenterPointIdRef.current = centerPoint.id
+        }
+      } catch (error) {
+        console.error('Error setting map view:', error)
+      }
     }
   }, [centerPoint, map])
   
@@ -30,16 +58,24 @@ function MapController({ centerPoint }) {
 
 function MapView({ points, userLocation, loading, centerPoint }) {
   const mapRef = useRef(null)
+  const hasCenteredRef = useRef(false)
 
   useEffect(() => {
-    if (mapRef.current && points.length > 0) {
+    // Only fit bounds if we haven't manually centered on a point
+    if (mapRef.current && points.length > 0 && !centerPoint) {
       const bounds = points.map(point => [point.latitude, point.longitude])
       if (userLocation) {
         bounds.push([userLocation.lat, userLocation.lng])
       }
-      mapRef.current.fitBounds(bounds, { padding: [50, 50] })
+      if (bounds.length > 0) {
+        try {
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] })
+        } catch (error) {
+          console.error('Error fitting bounds:', error)
+        }
+      }
     }
-  }, [points, userLocation])
+  }, [points, userLocation, centerPoint])
 
   if (loading) {
     return <div className="map-loading">Loading map...</div>
@@ -63,12 +99,12 @@ function MapView({ points, userLocation, loading, centerPoint }) {
         />
         <MapController centerPoint={centerPoint} />
         {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lng]}>
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={blueIcon}>
             <Popup>Your Location</Popup>
           </Marker>
         )}
         {points.map((point) => (
-          <Marker key={point.id} position={[point.latitude, point.longitude]}>
+          <Marker key={point.id} position={[point.latitude, point.longitude]} icon={greenIcon}>
             <Popup>
               <div>
                 <h3>{point.organization_name}</h3>

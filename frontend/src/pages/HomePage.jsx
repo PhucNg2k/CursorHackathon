@@ -18,11 +18,17 @@ function HomePage() {
   const [userLocation, setUserLocation] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [centerPoint, setCenterPoint] = useState(null)
+  const [allPoints, setAllPoints] = useState([])
 
+  // Get location only once on mount
+  useEffect(() => {
+    getCurrentLocation()
+  }, [])
+
+  // Fetch points when userLocation or verified filter changes
   useEffect(() => {
     fetchPoints()
-    getCurrentLocation()
-  }, [filters])
+  }, [userLocation, filters.verified])
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -44,23 +50,33 @@ function HomePage() {
     try {
       setLoading(true)
       const params = {}
-      if (filters.search) {
-        // For now, we'll fetch all and filter client-side
-        // Backend doesn't have text search yet
-      }
       if (userLocation) {
         params.lat = userLocation.lat
         params.lng = userLocation.lng
         params.radius = 50 // 50km radius
       }
       const response = await pointsAPI.getAll(params)
-      setPoints(response.data)
+      setAllPoints(response.data)
     } catch (error) {
       console.error('Failed to fetch points:', error)
+      setAllPoints([])
     } finally {
       setLoading(false)
     }
   }
+
+  // Filter points based on search term (case-insensitive, lowercase comparison)
+  useEffect(() => {
+    if (filters.search && filters.search.trim()) {
+      const searchLower = filters.search.toLowerCase().trim()
+      const filtered = allPoints.filter(point => 
+        point.organization_name?.toLowerCase().includes(searchLower)
+      )
+      setPoints(filtered)
+    } else {
+      setPoints(allPoints)
+    }
+  }, [filters.search, allPoints])
 
   const handleSearch = (searchTerm) => {
     setFilters({ ...filters, search: searchTerm })

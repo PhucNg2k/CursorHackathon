@@ -6,9 +6,15 @@ function SearchBar({ onSearch, onCreatePoint }) {
   const [searchTerm, setSearchTerm] = useState('')
   const { isAuthenticated } = useAuth()
 
+  const handleChange = (e) => {
+    const value = e.target.value
+    setSearchTerm(value)
+    onSearch(value) // Search on every keystroke
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSearch(searchTerm)
+    // Search already happens on keystroke, but keep form for accessibility
   }
 
   return (
@@ -18,7 +24,7 @@ function SearchBar({ onSearch, onCreatePoint }) {
           type="text"
           placeholder="Search donation points..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleChange}
         />
         <button type="submit">Search</button>
       </form>
