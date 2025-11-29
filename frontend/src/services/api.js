@@ -65,6 +65,18 @@ export const adminAPI = {
   unverifyCreator: (id) => api.post(`/api/admin/creators/${id}/unverify`),
 }
 
+// Helper function to get full image URL
+export const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return null
+  // If it's already a full URL, return as is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  // Otherwise, construct full URL using the API base URL
+  const baseURL = API_URL || ''
+  return `${baseURL}${imageUrl}`
+}
+
 // Donation Points API
 export const pointsAPI = {
   getAll: (params) => api.get('/api/donation-points', { params }),

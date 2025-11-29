@@ -1,14 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
 import math
+import shutil
+from pathlib import Path
 from datetime import datetime
 from .. import models, schemas, auth
 from ..database import get_db
 
 router = APIRouter(prefix="/api/donation-points", tags=["donation-points"])
 
+# Configuration for image uploads
+UPLOAD_DIR = Path("uploads/images")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+def get_image_url(image_path: Optional[str]) -> Optional[str]:
+    """Generate URL for image if it exists"""
+    if not image_path:
+        return None
+    return f"/api/donation-points/images/{Path(image_path).name}"
+
+
+def save_uploaded_file(file: UploadFile, point_id: int) -> str:
+    """Save uploaded file and return the file path"""
+    # Validate file extension
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Generate unique filename
+    filename = f"point_{point_id}_{int(datetime.now().timestamp())}{file_ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return str(file_path)
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -38,6 +74,7 @@ async def create_donation_point(
     description: Optional[str] = Form(None),
     start_date: Optional[datetime] = Form(None),
     end_date: Optional[datetime] = Form(None),
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_creator: models.Creator = Depends(auth.get_current_creator)
 ):
@@ -64,7 +101,22 @@ async def create_donation_point(
     db.commit()
     db.refresh(db_point)
     
-    return schemas.DonationPointResponse.model_validate(db_point)
+    # Handle image upload if provided
+    if image:
+        try:
+            image_path = save_uploaded_file(image, db_point.id)
+            db_point.image_path = image_path
+            db.commit()
+            db.refresh(db_point)
+        except Exception as e:
+            # If image upload fails, delete the point or just log the error
+            # For now, we'll just not set the image_path
+            print(f"Error saving image: {e}")
+    
+    # Convert to response with image_url
+    response_data = schemas.DonationPointResponse.model_validate(db_point)
+    response_data.image_url = get_image_url(db_point.image_path)
+    return response_data
 
 
 @router.get("", response_model=List[schemas.DonationPointResponse])
@@ -113,8 +165,36 @@ def search_donation_points(
     # If no search params, return all points
     points = query.all()
     
-    # Format response
-    return [schemas.DonationPointResponse.model_validate(point) for point in points]
+    # Format response with image URLs
+    responses = []
+    for point in points:
+        response = schemas.DonationPointResponse.model_validate(point)
+        response.image_url = get_image_url(point.image_path)
+        responses.append(response)
+    return responses
+
+
+@router.get("/images/{filename}")
+async def get_image(filename: str):
+    """Serve uploaded images"""
+    file_path = UPLOAD_DIR / filename
+    
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Image not found"
+        )
+    
+    # Security check: ensure file is within upload directory
+    try:
+        file_path.resolve().relative_to(UPLOAD_DIR.resolve())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    return FileResponse(file_path)
 
 
 @router.get("/{point_id}", response_model=schemas.DonationPointResponse)
@@ -127,7 +207,9 @@ def get_donation_point(point_id: int, db: Session = Depends(get_db)):
             detail="Donation point not found"
         )
     
-    return schemas.DonationPointResponse.model_validate(point)
+    response = schemas.DonationPointResponse.model_validate(point)
+    response.image_url = get_image_url(point.image_path)
+    return response
 
 
 @router.patch("/{point_id}", response_model=schemas.DonationPointResponse)
@@ -163,7 +245,9 @@ def update_donation_point(
     db.commit()
     db.refresh(point)
     
-    return schemas.DonationPointResponse.model_validate(point)
+    response = schemas.DonationPointResponse.model_validate(point)
+    response.image_url = get_image_url(point.image_path)
+    return response
 
 
 

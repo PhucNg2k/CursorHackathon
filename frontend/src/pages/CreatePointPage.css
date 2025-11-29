@@ -182,3 +182,62 @@ button:disabled {
   cursor: pointer;
 }
 
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.image-input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.image-input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.image-hint {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.image-preview-container {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.image-preview {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.remove-image-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.remove-image-btn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.remove-image-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

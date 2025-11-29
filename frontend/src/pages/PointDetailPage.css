@@ -34,6 +34,19 @@
   margin-bottom: 1.5rem;
 }
 
+.point-image-section {
+  margin-bottom: 2rem;
+}
+
+.point-detail-image {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #f5f5f5;
+}
+
 .point-info {
   margin-bottom: 2rem;
   padding: 1rem;

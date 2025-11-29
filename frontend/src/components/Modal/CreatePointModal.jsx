@@ -35,6 +35,8 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
     start_date: '',
     end_date: '',
   })
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -70,6 +72,38 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
         setSelectedLocation([lat, lng])
       }
     }
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)')
+        return
+      }
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size must be less than 10MB')
+        return
+      }
+      
+      setSelectedImage(file)
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null)
+    setImagePreview(null)
   }
 
   const handleMapClick = (latlng) => {
@@ -124,6 +158,9 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
       if (formData.end_date) {
         formDataToSend.append('end_date', formData.end_date)
       }
+      if (selectedImage) {
+        formDataToSend.append('image', selectedImage)
+      }
 
       await pointsAPI.create(formDataToSend)
       alert('Donation point created successfully!')
@@ -138,6 +175,9 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
         start_date: '',
         end_date: '',
       })
+      setSelectedImage(null)
+      setImagePreview(null)
+      setSelectedLocation(null)
       
       onClose()
       if (onSuccess) {
@@ -162,6 +202,9 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
         start_date: '',
         end_date: '',
       })
+      setSelectedImage(null)
+      setImagePreview(null)
+      setSelectedLocation(null)
       onClose()
     }
   }
@@ -288,6 +331,34 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
               rows="3"
               disabled={loading}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Image (Optional)</label>
+            {imagePreview ? (
+              <div className="image-preview-container">
+                <img src={imagePreview} alt="Preview" className="image-preview" />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="remove-image-btn"
+                  disabled={loading}
+                >
+                  Remove Image
+                </button>
+              </div>
+            ) : (
+              <div className="image-upload-container">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleImageChange}
+                  disabled={loading}
+                  className="image-input"
+                />
+                <p className="image-hint">Accepted formats: JPEG, PNG, GIF, WebP (max 10MB)</p>
+              </div>
+            )}
           </div>
 
           <div className="form-row">

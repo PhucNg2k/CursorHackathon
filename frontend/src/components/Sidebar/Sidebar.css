@@ -199,6 +199,21 @@
   color: white;
 }
 
+.point-image-container {
+  width: 100%;
+  height: 150px;
+  margin-bottom: 0.75rem;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.point-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .points-list a {
   text-decoration: none;
   color: inherit;

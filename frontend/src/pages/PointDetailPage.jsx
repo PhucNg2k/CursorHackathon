@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { pointsAPI } from '../services/api'
+import { pointsAPI, getImageUrl } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import './PointDetailPage.css'
 
@@ -46,6 +46,19 @@ function PointDetailPage() {
         </button>
 
         <h1>{point.organization_name}</h1>
+
+        {point.image_url && (
+          <div className="point-image-section">
+            <img 
+              src={getImageUrl(point.image_url)} 
+              alt={point.organization_name}
+              className="point-detail-image"
+              onError={(e) => {
+                e.target.style.display = 'none'
+              }}
+            />
+          </div>
+        )}
 
         <div className="point-info">
           <p><strong>Address:</strong> {point.address}</p>

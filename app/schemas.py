@@ -58,6 +58,7 @@ class DonationPointResponse(DonationPointBase):
     id: int
     creator_id: int
     status: PointStatus
+    image_url: Optional[str] = None  # URL to access the image
     created_at: datetime
 
     class Config:

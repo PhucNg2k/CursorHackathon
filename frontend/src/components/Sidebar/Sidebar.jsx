@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getImageUrl } from '../../services/api'
 import './Sidebar.css'
 
 function Sidebar({ points, loading, onFilterChange, filters, onCreatePoint, onPointClick }) {
@@ -57,6 +58,18 @@ function Sidebar({ points, loading, onFilterChange, filters, onCreatePoint, onPo
                         onClick={() => onPointClick && onPointClick(point)}
                         style={{ cursor: 'pointer' }}
                       >
+                        {point.image_url && (
+                          <div className="point-image-container">
+                            <img 
+                              src={getImageUrl(point.image_url)} 
+                              alt={point.organization_name}
+                              className="point-thumbnail"
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        )}
                         <h4>{point.organization_name}</h4>
                         <p>{point.address}</p>
                         <span className={`status ${point.status}`}>{point.status}</span>
