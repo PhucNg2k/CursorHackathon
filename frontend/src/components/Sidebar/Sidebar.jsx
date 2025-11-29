@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './Sidebar.css'
 
-function Sidebar({ points, loading, onFilterChange, filters, onCreatePoint }) {
+function Sidebar({ points, loading, onFilterChange, filters, onCreatePoint, onPointClick }) {
   const { isAuthenticated, user, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(true)
 
@@ -52,13 +52,15 @@ function Sidebar({ points, loading, onFilterChange, filters, onCreatePoint }) {
                 <ul>
                   {points.map((point) => (
                     <li key={point.id}>
-                      <Link to={`/points/${point.id}`}>
-                        <div className="point-item">
-                          <h4>{point.organization_name}</h4>
-                          <p>{point.address}</p>
-                          <span className={`status ${point.status}`}>{point.status}</span>
-                        </div>
-                      </Link>
+                      <div 
+                        className="point-item"
+                        onClick={() => onPointClick && onPointClick(point)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <h4>{point.organization_name}</h4>
+                        <p>{point.address}</p>
+                        <span className={`status ${point.status}`}>{point.status}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>

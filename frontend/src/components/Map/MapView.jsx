@@ -12,7 +12,23 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-function MapView({ points, userLocation, loading }) {
+// Component to handle map center changes
+function MapController({ centerPoint }) {
+  const map = useMap()
+  
+  useEffect(() => {
+    if (centerPoint) {
+      map.setView([centerPoint.latitude, centerPoint.longitude], 15, {
+        animate: true,
+        duration: 0.5
+      })
+    }
+  }, [centerPoint, map])
+  
+  return null
+}
+
+function MapView({ points, userLocation, loading, centerPoint }) {
   const mapRef = useRef(null)
 
   useEffect(() => {
@@ -45,6 +61,7 @@ function MapView({ points, userLocation, loading }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapController centerPoint={centerPoint} />
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]}>
             <Popup>Your Location</Popup>

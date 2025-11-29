@@ -163,6 +163,7 @@
   background: #f5f5f5;
   border-radius: 5px;
   transition: background 0.2s;
+  cursor: pointer;
 }
 
 .point-item:hover {

@@ -17,6 +17,7 @@ function HomePage() {
   })
   const [userLocation, setUserLocation] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [centerPoint, setCenterPoint] = useState(null)
 
   useEffect(() => {
     fetchPoints()
@@ -74,6 +75,10 @@ function HomePage() {
     fetchPoints()
   }
 
+  const handlePointClick = (point) => {
+    setCenterPoint(point)
+  }
+
   return (
     <div className="home-page">
       <Sidebar
@@ -82,6 +87,7 @@ function HomePage() {
         onFilterChange={handleFilterChange}
         filters={filters}
         onCreatePoint={() => setIsModalOpen(true)}
+        onPointClick={handlePointClick}
       />
       <div className="map-container">
         <SearchBar 
@@ -92,6 +98,7 @@ function HomePage() {
           points={points}
           userLocation={userLocation}
           loading={loading}
+          centerPoint={centerPoint}
         />
         {isAuthenticated && (
           <button 
