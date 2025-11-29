@@ -1,7 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { pointsAPI } from '../../services/api'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import './CreatePointModal.css'
+
+// Fix for default marker icons in React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
+
+// Component to handle map clicks
+function MapClickHandler({ onMapClick }) {
+  useMapEvents({
+    click: (e) => {
+      onMapClick(e.latlng)
+    },
+  })
+  return null
+}
 
 function CreatePointModal({ isOpen, onClose, onSuccess }) {
   const { isAuthenticated } = useAuth()
@@ -14,6 +35,8 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
     start_date: '',
     end_date: '',
   })
+  const [selectedLocation, setSelectedLocation] = useState(null)
+  const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null
@@ -33,21 +56,45 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
   }
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     })
+    
+    // Update map marker when coordinates are manually entered
+    if (name === 'latitude' || name === 'longitude') {
+      const lat = name === 'latitude' ? parseFloat(value) : parseFloat(formData.latitude)
+      const lng = name === 'longitude' ? parseFloat(value) : parseFloat(formData.longitude)
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        setSelectedLocation([lat, lng])
+      }
+    }
+  }
+
+  const handleMapClick = (latlng) => {
+    const lat = latlng.lat
+    const lng = latlng.lng
+    setSelectedLocation([lat, lng])
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+    }))
   }
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setFormData({
-            ...formData,
-            latitude: position.coords.latitude.toString(),
-            longitude: position.coords.longitude.toString(),
-          })
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setSelectedLocation([lat, lng])
+          setFormData(prev => ({
+            ...prev,
+            latitude: lat.toString(),
+            longitude: lng.toString(),
+          }))
         },
         (error) => {
           alert('Error getting location: ' + error.message)
@@ -155,19 +202,8 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label>Latitude *</label>
-            <div className="location-input">
-              <input
-                type="number"
-                step="any"
-                name="latitude"
-                value={formData.latitude}
-                onChange={handleInputChange}
-                required
-                min="-90"
-                max="90"
-                disabled={loading}
-              />
+            <label>Location *</label>
+            <div className="location-buttons">
               <button 
                 type="button" 
                 onClick={handleGetLocation} 
@@ -176,22 +212,71 @@ function CreatePointModal({ isOpen, onClose, onSuccess }) {
               >
                 Get Location
               </button>
+              <button 
+                type="button" 
+                onClick={() => setShowMap(!showMap)} 
+                className="map-pinning-btn"
+                disabled={loading}
+              >
+                {showMap ? 'Hide Map' : 'Map Pinning'}
+              </button>
             </div>
-          </div>
-
-          <div className="form-group">
-            <label>Longitude *</label>
-            <input
-              type="number"
-              step="any"
-              name="longitude"
-              value={formData.longitude}
-              onChange={handleInputChange}
-              required
-              min="-180"
-              max="180"
-              disabled={loading}
-            />
+            
+            {showMap && (
+              <div className="map-picker">
+                {selectedLocation ? (
+                  <MapContainer
+                    key={`${selectedLocation[0]}-${selectedLocation[1]}`}
+                    center={selectedLocation}
+                    zoom={13}
+                    style={{ height: '300px', width: '100%', borderRadius: '5px', marginTop: '1rem' }}
+                    scrollWheelZoom={true}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <MapClickHandler onMapClick={handleMapClick} />
+                    <Marker position={selectedLocation} />
+                  </MapContainer>
+                ) : (
+                  <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '5px', marginTop: '1rem' }}>
+                    <p>Click on the map to set location</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="coordinates-input">
+              <div className="coordinate-group">
+                <label>Latitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="latitude"
+                  value={formData.latitude}
+                  onChange={handleInputChange}
+                  required
+                  min="-90"
+                  max="90"
+                  disabled={loading}
+                />
+              </div>
+              <div className="coordinate-group">
+                <label>Longitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="longitude"
+                  value={formData.longitude}
+                  onChange={handleInputChange}
+                  required
+                  min="-180"
+                  max="180"
+                  disabled={loading}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="form-group">

@@ -129,15 +129,23 @@
   flex: 1;
 }
 
+.location-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
 .get-location-btn {
+  flex: 1;
   padding: 0.75rem 1rem;
   background: #10b981;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  white-space: nowrap;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
   transition: background 0.3s;
 }
 
@@ -148,6 +156,53 @@
 .get-location-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.map-pinning-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.map-pinning-btn:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.map-pinning-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.map-picker {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.coordinates-input {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.coordinate-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.coordinate-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .image-count {

@@ -1,32 +1,66 @@
+.sidebar-wrapper {
+  position: relative;
+  display: flex;
+  height: 100vh;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
 .sidebar {
   width: 300px;
   height: 100vh;
   background: white;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-  position: relative;
+  transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
   overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  position: relative;
 }
 
 .sidebar.closed {
-  transform: translateX(-100%);
-  position: absolute;
-  z-index: 1000;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sidebar.open {
+  width: 300px;
+  min-width: 300px;
 }
 
 .toggle-button {
-  position: absolute;
-  right: -30px;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 30px;
-  height: 50px;
-  background: white;
-  border: 1px solid #ddd;
-  border-left: none;
-  border-radius: 0 5px 5px 0;
+  width: 35px;
+  height: 60px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 0 8px 8px 0;
   cursor: pointer;
-  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.sidebar.open ~ .toggle-button {
+  left: 300px;
+}
+
+.sidebar.closed ~ .toggle-button {
+  left: 0;
+}
+
+.toggle-button:hover {
+  background: #5568d3;
+  width: 40px;
 }
 
 .sidebar-content {
@@ -40,18 +74,15 @@
 }
 
 .sidebar-header h2 {
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .user-info p {
   margin-bottom: 0.5rem;
   font-weight: 500;
-}
-
-.user-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .user-actions {
@@ -76,14 +107,6 @@
 
 .user-actions a:hover {
   background: #5568d3;
-}
-
-.user-actions .create-point-sidebar-btn {
-  background: #10b981;
-}
-
-.user-actions .create-point-sidebar-btn:hover {
-  background: #059669;
 }
 
 .user-actions button:last-child {

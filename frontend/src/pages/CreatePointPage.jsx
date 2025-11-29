@@ -1,11 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { pointsAPI } from '../services/api'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import './CreatePointPage.css'
 
+// Fix for default marker icons in React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
+
+// Component to handle map clicks
+function MapClickHandler({ onMapClick }) {
+  useMapEvents({
+    click: (e) => {
+      onMapClick(e.latlng)
+    },
+  })
+  return null
+}
+
 function CreatePointPage() {
-  const { isAuthenticated, isVerified } = useAuth()
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     organization_name: '',
@@ -16,46 +37,85 @@ function CreatePointPage() {
     start_date: '',
     end_date: '',
   })
-  const [images, setImages] = useState([])
+  const [selectedLocation, setSelectedLocation] = useState(null)
+  const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Get user's current location on mount
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setSelectedLocation([lat, lng])
+          setFormData(prev => ({
+            ...prev,
+            latitude: lat.toString(),
+            longitude: lng.toString(),
+          }))
+        },
+        () => {
+          // Default to Ho Chi Minh City if geolocation fails
+          const defaultLat = 10.8231
+          const defaultLng = 106.6297
+          setSelectedLocation([defaultLat, defaultLng])
+        }
+      )
+    } else {
+      // Default to Ho Chi Minh City
+      const defaultLat = 10.8231
+      const defaultLng = 106.6297
+      setSelectedLocation([defaultLat, defaultLng])
+    }
+  }, [])
+
+  const handleMapClick = (latlng) => {
+    const lat = latlng.lat
+    const lng = latlng.lng
+    setSelectedLocation([lat, lng])
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+    }))
+  }
 
   if (!isAuthenticated) {
     navigate('/login')
     return null
   }
 
-  if (!isVerified) {
-    return (
-      <div className="create-point-page">
-        <div className="error-message">
-          <h2>Verification Required</h2>
-          <p>You need to verify your creator account before creating donation points.</p>
-          <button onClick={() => navigate('/profile')}>Go to Profile</button>
-        </div>
-      </div>
-    )
-  }
-
   const handleInputChange = (e) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     })
+    
+    // Update map marker when coordinates are manually entered
+    if (name === 'latitude' || name === 'longitude') {
+      const lat = name === 'latitude' ? parseFloat(value) : parseFloat(formData.latitude)
+      const lng = name === 'longitude' ? parseFloat(value) : parseFloat(formData.longitude)
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        setSelectedLocation([lat, lng])
+      }
+    }
   }
 
-  const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files))
-  }
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setFormData({
-            ...formData,
-            latitude: position.coords.latitude.toString(),
-            longitude: position.coords.longitude.toString(),
-          })
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setSelectedLocation([lat, lng])
+          setFormData(prev => ({
+            ...prev,
+            latitude: lat.toString(),
+            longitude: lng.toString(),
+          }))
         },
         (error) => {
           alert('Error getting location: ' + error.message)
@@ -85,9 +145,6 @@ function CreatePointPage() {
       if (formData.end_date) {
         formDataToSend.append('end_date', formData.end_date)
       }
-      images.forEach((image) => {
-        formDataToSend.append('files', image)
-      })
 
       await pointsAPI.create(formDataToSend)
       alert('Donation point created successfully!')
@@ -128,36 +185,77 @@ function CreatePointPage() {
           </div>
 
           <div className="form-group">
-            <label>Latitude *</label>
-            <div className="location-input">
-              <input
-                type="number"
-                step="any"
-                name="latitude"
-                value={formData.latitude}
-                onChange={handleInputChange}
-                required
-                min="-90"
-                max="90"
-              />
-              <button type="button" onClick={handleGetLocation} className="get-location-btn">
-                Get Current Location
+            <label>Location *</label>
+            <div className="location-buttons">
+              <button 
+                type="button" 
+                onClick={handleGetLocation} 
+                className="get-location-btn"
+              >
+                Get Location
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowMap(!showMap)} 
+                className="map-pinning-btn"
+              >
+                {showMap ? 'Hide Map' : 'Map Pinning'}
               </button>
             </div>
-          </div>
-
-          <div className="form-group">
-            <label>Longitude *</label>
-            <input
-              type="number"
-              step="any"
-              name="longitude"
-              value={formData.longitude}
-              onChange={handleInputChange}
-              required
-              min="-180"
-              max="180"
-            />
+            
+            {showMap && (
+              <div className="map-picker">
+                {selectedLocation ? (
+                  <MapContainer
+                    key={`${selectedLocation[0]}-${selectedLocation[1]}`}
+                    center={selectedLocation}
+                    zoom={13}
+                    style={{ height: '400px', width: '100%', borderRadius: '5px' }}
+                    scrollWheelZoom={true}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <MapClickHandler onMapClick={handleMapClick} />
+                    <Marker position={selectedLocation} />
+                  </MapContainer>
+                ) : (
+                  <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '5px' }}>
+                    <p>Click on the map to set location</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="coordinates-input">
+              <div className="coordinate-group">
+                <label>Latitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="latitude"
+                  value={formData.latitude}
+                  onChange={handleInputChange}
+                  required
+                  min="-90"
+                  max="90"
+                />
+              </div>
+              <div className="coordinate-group">
+                <label>Longitude *</label>
+                <input
+                  type="number"
+                  step="any"
+                  name="longitude"
+                  value={formData.longitude}
+                  onChange={handleInputChange}
+                  required
+                  min="-180"
+                  max="180"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="form-group">
@@ -190,18 +288,6 @@ function CreatePointPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label>Images</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-            />
-            {images.length > 0 && (
-              <p className="image-count">{images.length} image(s) selected</p>
-            )}
-          </div>
 
           <button type="submit" disabled={loading} className="submit-button">
             {loading ? 'Creating...' : 'Create Donation Point'}
