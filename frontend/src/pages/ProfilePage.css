@@ -1,0 +1,109 @@
+.profile-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.profile-container {
+  max-width: 500px;
+  width: 100%;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-container h1 {
+  margin-bottom: 1.5rem;
+}
+
+.profile-info {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 5px;
+}
+
+.profile-info p {
+  margin: 0.5rem 0;
+}
+
+.profile-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.profile-form button,
+.verify-button,
+.logout-button,
+.back-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.profile-form button {
+  background: #667eea;
+  color: white;
+}
+
+.profile-form button:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.verify-button {
+  background: #10b981;
+  color: white;
+}
+
+.verify-button:hover:not(:disabled) {
+  background: #059669;
+}
+
+.logout-button {
+  background: #ef4444;
+  color: white;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+}
+
+.back-button {
+  background: #6b7280;
+  color: white;
+}
+
+.back-button:hover {
+  background: #4b5563;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

@@ -4,16 +4,6 @@
 
 ```
 CursorHackathon/
-├── backend/
-│   ├── src/
-│   │   ├── models/          # Database models
-│   │   ├── routes/          # API routes
-│   │   ├── controllers/     # Business logic
-│   │   ├── middleware/      # Auth, validation middleware
-│   │   ├── config/          # Database, auth config
-│   │   └── utils/           # Helper functions
-│   ├── package.json
-│   └── .env
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # React components

@@ -57,7 +57,6 @@ class DonationPointUpdate(BaseModel):
 class DonationPointResponse(DonationPointBase):
     id: int
     creator_id: int
-    images: Optional[List[str]] = None
     status: PointStatus
     created_at: datetime
 

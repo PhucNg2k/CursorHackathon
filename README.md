@@ -63,9 +63,23 @@ Interactive API documentation: `http://localhost:8000/docs`
   - Headers: `Authorization: Bearer <token>`
   - Returns: Verified creator object
 
+### Admin
+
+- `GET /api/admin/creators` - List all creators (requires authentication)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: List of all creator objects
+
+- `POST /api/admin/creators/{id}/verify` - Verify a creator (admin endpoint)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: Verified creator object
+
+- `POST /api/admin/creators/{id}/unverify` - Unverify a creator (admin endpoint)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: Unverified creator object
+
 ### Donation Points
 
-- `POST /api/donation-points` - Create a new donation point with images (requires verified creator)
+- `POST /api/donation-points` - Create a new donation point with images (requires authenticated creator)
   - Headers: `Authorization: Bearer <token>`
   - Content-Type: `multipart/form-data`
   - Body (form data):
@@ -143,4 +157,5 @@ Interactive API documentation: `http://localhost:8000/docs`
 - Database file (`db.sqlite`) is created automatically on first run
 - Images are stored in the `uploads/` directory
 - For production, change the `SECRET_KEY` in `app/auth.py`
-- Creator verification is simplified for MVP (any authenticated creator can verify others)
+- **Users are automatically verified on login/registration** (no manual verification needed)
+- Admin endpoints (`/api/admin/*`) are accessible by any authenticated user (for MVP simplicity)

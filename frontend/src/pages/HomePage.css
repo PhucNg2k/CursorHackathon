@@ -1,0 +1,72 @@
+.home-page {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-point-fab {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.create-point-fab:hover {
+  background: #5568d3;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.create-point-fab .fab-text {
+  display: none;
+}
+
+.create-point-fab:hover .fab-text {
+  display: inline;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+.create-point-fab:hover span:first-child {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .create-point-fab {
+    width: auto;
+    height: auto;
+    padding: 1rem 1.5rem;
+    border-radius: 30px;
+    font-size: 1rem;
+  }
+  
+  .create-point-fab span:first-child {
+    display: none;
+  }
+  
+  .create-point-fab .fab-text {
+    display: inline;
+  }
+}
+

@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional
-import json
-import os
 import math
 from datetime import datetime
 from .. import models, schemas, auth
@@ -11,9 +9,6 @@ from ..database import get_db
 
 router = APIRouter(prefix="/api/donation-points", tags=["donation-points"])
 
-# Create uploads directory if it doesn't exist
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -43,11 +38,10 @@ async def create_donation_point(
     description: Optional[str] = Form(None),
     start_date: Optional[datetime] = Form(None),
     end_date: Optional[datetime] = Form(None),
-    files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
-    current_creator: models.Creator = Depends(auth.get_current_verified_creator)
+    current_creator: models.Creator = Depends(auth.get_current_creator)
 ):
-    """Create a new donation point with images (requires verified creator)"""
+    """Create a new donation point (requires authenticated creator)"""
     # Validate coordinates
     if not (-90 <= latitude <= 90):
         raise HTTPException(status_code=400, detail="Latitude must be between -90 and 90")
@@ -62,7 +56,6 @@ async def create_donation_point(
         latitude=latitude,
         longitude=longitude,
         description=description,
-        images=json.dumps([]),  # Will be updated after saving files
         start_date=start_date,
         end_date=end_date,
         status=models.PointStatus.ONGOING
@@ -71,34 +64,7 @@ async def create_donation_point(
     db.commit()
     db.refresh(db_point)
     
-    # Save uploaded images if any
-    uploaded_paths = []
-    if files:
-        for file in files:
-            # Generate unique filename
-            file_ext = os.path.splitext(file.filename)[1]
-            file_path = os.path.join(UPLOAD_DIR, f"{db_point.id}_{len(uploaded_paths)}{file_ext}")
-            
-            # Save file
-            with open(file_path, "wb") as f:
-                content = await file.read()
-                f.write(content)
-            
-            uploaded_paths.append(file_path)
-    
-    # Update images in database
-    if uploaded_paths:
-        db_point.images = json.dumps(uploaded_paths)
-        db.commit()
-        db.refresh(db_point)
-    
-    # Parse images JSON for response
-    response_point = schemas.DonationPointResponse.model_validate(db_point)
-    try:
-        response_point.images = json.loads(db_point.images) if db_point.images else []
-    except (json.JSONDecodeError, TypeError):
-        response_point.images = []
-    return response_point
+    return schemas.DonationPointResponse.model_validate(db_point)
 
 
 @router.get("", response_model=List[schemas.DonationPointResponse])
@@ -148,16 +114,7 @@ def search_donation_points(
     points = query.all()
     
     # Format response
-    result = []
-    for point in points:
-        response_point = schemas.DonationPointResponse.model_validate(point)
-        try:
-            response_point.images = json.loads(point.images) if point.images else []
-        except (json.JSONDecodeError, TypeError):
-            response_point.images = []
-        result.append(response_point)
-    
-    return result
+    return [schemas.DonationPointResponse.model_validate(point) for point in points]
 
 
 @router.get("/{point_id}", response_model=schemas.DonationPointResponse)
@@ -170,12 +127,7 @@ def get_donation_point(point_id: int, db: Session = Depends(get_db)):
             detail="Donation point not found"
         )
     
-    response_point = schemas.DonationPointResponse.model_validate(point)
-    try:
-        response_point.images = json.loads(point.images) if point.images else []
-    except (json.JSONDecodeError, TypeError):
-        response_point.images = []
-    return response_point
+    return schemas.DonationPointResponse.model_validate(point)
 
 
 @router.patch("/{point_id}", response_model=schemas.DonationPointResponse)
@@ -211,66 +163,7 @@ def update_donation_point(
     db.commit()
     db.refresh(point)
     
-    response_point = schemas.DonationPointResponse.model_validate(point)
-    try:
-        response_point.images = json.loads(point.images) if point.images else []
-    except (json.JSONDecodeError, TypeError):
-        response_point.images = []
-    return response_point
+    return schemas.DonationPointResponse.model_validate(point)
 
 
-@router.post("/{point_id}/images", response_model=schemas.DonationPointResponse)
-async def upload_images(
-    point_id: int,
-    files: List[UploadFile] = File(...),
-    db: Session = Depends(get_db),
-    current_creator: models.Creator = Depends(auth.get_current_creator)
-):
-    """Upload images for a donation point"""
-    point = db.query(models.DonationPoint).filter(models.DonationPoint.id == point_id).first()
-    if not point:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Donation point not found"
-        )
-    
-    # Check if current creator owns this point
-    if point.creator_id != current_creator.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to upload images for this donation point"
-        )
-    
-    # Load existing images
-    try:
-        existing_images = json.loads(point.images) if point.images else []
-    except (json.JSONDecodeError, TypeError):
-        existing_images = []
-    
-    # Save uploaded files
-    uploaded_paths = []
-    for file in files:
-        # Generate unique filename
-        file_ext = os.path.splitext(file.filename)[1]
-        file_path = os.path.join(UPLOAD_DIR, f"{point_id}_{len(existing_images) + len(uploaded_paths)}{file_ext}")
-        
-        # Save file
-        with open(file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        
-        uploaded_paths.append(file_path)
-    
-    # Update images in database
-    all_images = existing_images + uploaded_paths
-    point.images = json.dumps(all_images)
-    db.commit()
-    db.refresh(point)
-    
-    response_point = schemas.DonationPointResponse.model_validate(point)
-    try:
-        response_point.images = json.loads(point.images) if point.images else []
-    except (json.JSONDecodeError, TypeError):
-        response_point.images = []
-    return response_point
 

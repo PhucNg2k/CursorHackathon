@@ -50,16 +50,19 @@ def login_with_google(google_login: schemas.GoogleLogin, db: Session = Depends(g
             # Update google_id if not set
             if not creator.google_id:
                 creator.google_id = google_id
-                db.commit()
-                db.refresh(creator)
+            # Auto-verify authenticated users
+            if not creator.verified:
+                creator.verified = True
+            db.commit()
+            db.refresh(creator)
         else:
-            # Create new creator
+            # Create new creator - auto-verify authenticated users
             creator = models.Creator(
                 name=name,
                 email=email,
                 google_id=google_id,
                 password_hash=None,  # No password for Google OAuth users
-                verified=False
+                verified=True  # Auto-verify on registration
             )
             db.add(creator)
             db.commit()
@@ -67,9 +70,14 @@ def login_with_google(google_login: schemas.GoogleLogin, db: Session = Depends(g
         
         # Generate JWT token
         access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+        # JWT requires 'sub' to be a string, so convert creator_id to string
+        creator_id = str(creator.id)
+        print(f"[LOGIN DEBUG] Creating token for creator_id: {creator_id}, type: {type(creator_id)}")
+        print(f"[LOGIN DEBUG] Creator details: id={creator.id}, email={creator.email}, name={creator.name}")
         access_token = auth.create_access_token(
-            data={"sub": creator.id}, expires_delta=access_token_expires
+            data={"sub": creator_id}, expires_delta=access_token_expires
         )
+        print(f"[LOGIN DEBUG] Token created: {access_token[:50]}...")
         return {"access_token": access_token, "token_type": "bearer"}
         
     except ValueError as e:
@@ -107,6 +115,7 @@ def get_current_creator_info(
     current_creator: models.Creator = Depends(auth.get_current_creator)
 ):
     """Get current authenticated creator information"""
+    print(f"[ME DEBUG] Current creator: id={current_creator.id}, email={current_creator.email}")
     return current_creator
 
 

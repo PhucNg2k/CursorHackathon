@@ -49,13 +49,41 @@ def get_current_creator(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        print(f"[AUTH DEBUG] Token received: {token[:20]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        creator_id: int = payload.get("sub")
+        print(f"[AUTH DEBUG] Token payload: {payload}")
+        creator_id = payload.get("sub")
+        print(f"[AUTH DEBUG] Creator ID from token: {creator_id}, type: {type(creator_id)}")
+        
         if creator_id is None:
+            print("[AUTH DEBUG] Creator ID is None")
             raise credentials_exception
-    except JWTError:
+        
+        # JWT returns 'sub' as string, convert to integer for database query
+        try:
+            creator_id = int(creator_id)
+            print(f"[AUTH DEBUG] Creator ID converted to int: {creator_id}")
+        except (ValueError, TypeError) as e:
+            print(f"[AUTH DEBUG] Failed to convert creator_id to int: {e}")
+            raise credentials_exception
+    except JWTError as e:
+        print(f"[AUTH DEBUG] JWT Error: {e}")
         raise credentials_exception
+    except Exception as e:
+        print(f"[AUTH DEBUG] Unexpected error: {e}")
+        raise credentials_exception
+    
+    # Check if creator exists in database
     creator = db.query(models.Creator).filter(models.Creator.id == creator_id).first()
+    print(f"[AUTH DEBUG] Creator found in DB: {creator is not None}")
+    if creator:
+        print(f"[AUTH DEBUG] Creator details: id={creator.id}, email={creator.email}, name={creator.name}")
+    else:
+        print(f"[AUTH DEBUG] No creator found with ID: {creator_id}")
+        # List all creators in DB for debugging
+        all_creators = db.query(models.Creator).all()
+        print(f"[AUTH DEBUG] All creators in DB: {[(c.id, c.email) for c in all_creators]}")
+    
     if creator is None:
         raise credentials_exception
     return creator

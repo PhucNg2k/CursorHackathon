@@ -1,0 +1,126 @@
+.point-detail-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2rem;
+  background: #f5f5f5;
+}
+
+.point-detail-container {
+  max-width: 800px;
+  width: 100%;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: #4b5563;
+}
+
+.point-detail-container h1 {
+  margin-bottom: 1.5rem;
+}
+
+.point-info {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 5px;
+}
+
+.point-info p {
+  margin: 0.5rem 0;
+}
+
+.status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.status.ongoing {
+  background: #10b981;
+  color: white;
+}
+
+.status.ended {
+  background: #6b7280;
+  color: white;
+}
+
+.point-images {
+  margin-bottom: 2rem;
+}
+
+.point-images h2 {
+  margin-bottom: 1rem;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.image-grid img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.point-location {
+  margin-bottom: 2rem;
+}
+
+.point-location h2 {
+  margin-bottom: 1rem;
+}
+
+.map-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.map-link:hover {
+  background: #5568d3;
+}
+
+.owner-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #ddd;
+}
+
+.edit-button {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-button:hover {
+  background: #5568d3;
+}
+

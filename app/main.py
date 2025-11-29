@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import init_db
-from .routers import creators, donation_points
+from .routers import creators, donation_points, admin
 
 # Initialize database
 init_db()
@@ -25,6 +25,7 @@ app.add_middleware(
 # Include routers
 app.include_router(creators.router)
 app.include_router(donation_points.router)
+app.include_router(admin.router)
 
 
 @app.get("/")

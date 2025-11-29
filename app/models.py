@@ -35,7 +35,6 @@ class DonationPoint(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     description = Column(String)
-    images = Column(String)  # JSON array of file paths
     start_date = Column(DateTime(timezone=True))
     end_date = Column(DateTime(timezone=True))
     status = Column(SQLEnum(PointStatus), default=PointStatus.ONGOING, nullable=False)
